@@ -33,6 +33,7 @@ pip install -r requirements.txt
 | `OPENAI_API_KEY` | API key for AI chat. Use **Groq key** (from [console.groq.com](https://console.groq.com)) when using Groq. | `gsk_...` (Groq) |
 | `OPENAI_BASE_URL` | API base URL. Set to Groq URL when using Groq. | `https://api.groq.com/openai/v1` (Groq) |
 | `OPENAI_MODEL` | Model name. OpenAI default (chat): `gpt-4o` if unset. Groq: `llama-3.3-70b-versatile`. | optional |
+| `CORS_ALLOW_ORIGINS` | Comma-separated frontend origins allowed by CORS (for browser calls). If unset, only localhost is allowed. | `http://localhost:3000,https://your-frontend.vercel.app` |
 | `CHATBOT_LOG_INITIATIVE` | If `1` / `true` / `yes` / `on`, log effective initiative on each bot reply (stderr, e.g. `INFO:companion.service:initiative bot_id=...`). | `1` |
 | `CHATBOT_INITIATIVE_TONE_LLM` | If `1` / `true` / `yes` / `on`, one small LLM call per turn classifies the latest user turn as **hostile** and/or **warm** (thanks, apology, de-escalation, repair) using recent transcript for context—used only for initiative nudges (not moderation). No keyword fallback. | unset (off) |
 | `CHATBOT_INITIATIVE_HOSTILITY_LLM` | Legacy alias for `CHATBOT_INITIATIVE_TONE_LLM` (same behavior). | optional |

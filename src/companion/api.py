@@ -35,6 +35,22 @@ from companion import service
 from contextlib import asynccontextmanager
 
 
+def _cors_allow_origins() -> list[str]:
+    """
+    Resolve CORS allowlist.
+
+    - Default: local frontend dev origins
+    - Override/extend via env `CORS_ALLOW_ORIGINS`, comma-separated
+      e.g. "http://localhost:3000,https://my-frontend.vercel.app"
+    """
+    default = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    raw = (os.getenv("CORS_ALLOW_ORIGINS") or "").strip()
+    if not raw:
+        return default
+    parsed = [x.strip().rstrip("/") for x in raw.split(",") if x.strip()]
+    return parsed or default
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # startup: login/token depend on this; fail fast if unset
@@ -56,7 +72,7 @@ app = FastAPI(title="ChatBot API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_cors_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
