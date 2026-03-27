@@ -8,9 +8,9 @@ A full-stack AI companion chat platform with persistent sessions, customizable b
 ## Tech Stack
 
 ### Languages & runtimes
-- **Python 3** (backend)
-- **TypeScript** (frontend)
-- **Node.js** (Next.js build / dev)
+- **Python 3**
+- **TypeScript**
+- **Node.js**
 
 ### Backend
 - **FastAPI** — HTTP API
@@ -21,10 +21,9 @@ A full-stack AI companion chat platform with persistent sessions, customizable b
 ### Frontend
 - **Next.js 14** (App Router)
 - **React 18**
-- **TypeScript**
 
 ### Data
-- **PostgreSQL** (local Docker or hosted, e.g. **Neon**)
+- **PostgreSQL**
 
 ### Auth & security
 - **Bearer token** session model (signed tokens)
@@ -39,17 +38,18 @@ A full-stack AI companion chat platform with persistent sessions, customizable b
 ### Testing
 - **pytest** — API & service tests
 
-### DevOps / hosting (typical)
-- **Render** — API
-- **Vercel** — Next.js UI
-- **GitHub** — source control & deploy hooks
+### Hosting
+- **Render** — backend API
+- **Vercel** — frontend
+- **Neon** — PostgreSQL
 
 ## Features
 
-- **Accounts & auth** — Register / login with bearer tokens; optional remember-me; logout revokes the active token.
-- **Custom companions** — Multiple bots per account (persona, interests, initiative, avatar); each bot keeps its own session and **persisted** message history.
-- **Stateful chat** — Relationship-style metrics (trust, resonance, affection, openness, mood) evolve across turns; interests and initiative steer tone and engagement.
-- **LLM integration** — OpenAI-compatible chat APIs (e.g. OpenAI, Groq); configurable model and base URL.
+- **Authentication** — Register, log in, and use bearer-token-based sessions with optional remember-me support.
+- **Companion management** — Create and manage multiple bots per account, each with its own persona, interests, initiative level, avatar, and persistent conversation history.
+- **Persistent conversations** — Resume chats across visits with durable session and message storage.
+- **Relationship-aware responses** — Replies incorporate persistent companion state, including trust, resonance, affection, openness, mood, interests, and initiative.
+- **LLM provider support** — Integrate with OpenAI-compatible chat providers using configurable model and endpoint settings.
 
 ## Project Structure
 

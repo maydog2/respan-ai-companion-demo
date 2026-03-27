@@ -26,15 +26,16 @@ The architecture follows a split full-stack model: a **Next.js** frontend for th
 
 ## 3. High-Level Architecture
 
-At runtime the system is four logical pillars plus where they usually run in production:
+At runtime, the system is organized into four primary components:
 
-| Layer | Responsibility |
-|-------|----------------|
-| **Frontend** | **Next.js** app: UI, auth flow, bot / profile management, and chat interaction. |
-| **Backend API** | **FastAPI** service: authentication, session & message APIs, bot/companion state, and **LLM orchestration**. |
-| **Database** | **PostgreSQL** (often **Neon** in production) for durable users, bots, sessions, messages, and relationship state. |
-| **LLM provider** | **OpenAI-compatible** HTTP API for assistant generations (OpenAI, Groq, or other compatible hosts). |
-| **Deployment** | Typical split: **Vercel** (frontend), **Render** (backend), **Neon** (DB). See [Deployment](DEPLOYMENT.md). |
+| Component | Responsibility |
+| --- | --- |
+| Frontend | **Next.js** web client for the user-facing interface, authentication flow, bot/profile management, and chat interaction. |
+| Backend API | **FastAPI** service for authentication, session/message APIs, companion-state management, and LLM orchestration. |
+| Database | **PostgreSQL** for durable users, bots, sessions, messages, and relationship state (often hosted on Neon in production). |
+| LLM provider | **OpenAI-compatible HTTP API** used for assistant generation (for example, OpenAI, Groq, or other compatible providers). |
+
+**Typical production deployment:** Vercel (frontend), Render (backend), and Neon (database). See [Deployment](DEPLOYMENT.md).
 
 Traffic and dependencies in one view:
 
@@ -47,7 +48,7 @@ Next.js frontend (Vercel)
   │  HTTPS / JSON API
   ▼
 FastAPI backend (Render)
-  ├──► PostgreSQL / Neon
+  ├──► PostgreSQL (Neon)
   └──► OpenAI-compatible LLM API
 ```
 
@@ -95,22 +96,18 @@ Tokens are opaque strings to the client; the UI stores them and attaches them to
 
 Typical path: the client sends a chat turn for a specific bot. The backend authenticates the user, resolves the bot/session, persists the user message, builds model context from recent transcript and companion state, calls the LLM provider, stores the assistant reply, applies post-turn state updates, and returns the new reply plus refreshed relationship metrics.
 
-Relationship-state updates can occur at multiple points in the turn pipeline: optional client-provided deltas, server-side updates derived from the latest user turn, and post-reply trigger rules after the assistant response is generated.
+Relationship-state updates may occur at multiple points in the turn pipeline: optional client-provided deltas, server-side updates derived from the latest user turn, and post-reply trigger rules after the assistant response is generated.
 
-1. **Authenticate** — Resolve `user_id` from the bearer token.
-2. **Optional manual deltas** — If client-provided relationship adjustments are present, they are applied before the rest of the turn.
-3. **Resolve bot and session** — Load the **Bot** row (must belong to this user). The bot row carries **`session_id`**; one session backs the chat thread for that bot.
-4. **Store user message** — Insert a **Message** row (`role=user`) into that session.
-5. **Load transcript** — Read recent persisted messages from that session to build model context for this turn.
-6. **Update relationship from this user turn** — Apply **turn-level relationship deltas** (e.g. mood / internal rules) from the latest user text.
-7. **Build the model prompt** — The backend (source of truth) composes the effective prompt from durable bot/session state and current relationship signals, rather than trusting client-provided prompt text alone.
-8. **Call the LLM** — Send **system + transcript** to the **OpenAI-compatible** API; receive assistant text.
-9. **Post-process** — Run **reply cleanup** rules (e.g. strip unwanted boilerplate, enforce initiative-related shape where configured).
-10. **Store assistant message** — Insert **`role=assistant`** message.
-11. **Post-turn relationship rules** — Run **trigger-style updates** that depend on both the user message and the assistant reply, then read **fresh relationship** values.
-12. **Respond** — Return the assistant reply plus refreshed companion/relationship state needed by the client UI.
+1. **Authenticate the user** — Resolve `user_id` from the bearer token.
+2. **Resolve the bot and active session** — Load the bot for this user and identify the session backing that bot’s current conversation thread.
+3. **Persist the user turn** — Store the new user message and load recent transcript history for context construction.
+4. **Refresh companion state** — Apply turn-level relationship/state updates derived from the latest user input, along with any accepted client-provided deltas.
+5. **Build effective model input** — Compose the server-side prompt from durable bot/session state, recent transcript, and current relationship signals.
+6. **Call the LLM provider** — Send the effective prompt and transcript to the configured OpenAI-compatible API and receive the assistant response.
+7. **Post-process and persist the reply** — Apply reply cleanup or initiative-related shaping, then store the assistant message.
+8. **Apply post-turn state updates and respond** — Run reply-dependent trigger rules, read fresh relationship values, and return the new assistant reply plus updated companion state needed by the client UI.
 
-The HTTP handler runs inside a **per-request DB transaction** (commit on success), so a failed step rolls back the whole turn.
+The HTTP handler runs inside a per-request database transaction (commit on success, rollback on failure), so a failed step rolls back the entire turn.
 
 ### C. History and companion state (read)
 
@@ -121,18 +118,18 @@ Other read paths follow the same pattern: bearer auth, server-side ownership che
 
 ## 6. Design Decisions
 
-This section captures only system-shaping decisions. A decision is included only when it explains **why** the architecture is this way and what **trade-offs** we accept.
+This section captures only system-shaping decisions. A decision is included only when it explains **why** the architecture is this way and what **trade-offs** I accept.
 
 ### 1) Split frontend/backend architecture
 
 - **Decision:** Keep a separate Next.js frontend and FastAPI backend with clear API boundaries.
 - **Why:** This allows UI iteration to remain independent from backend/domain logic, centralizes authentication and data rules on the server, and avoids exposing database or LLM credentials to the browser.
-- **Trade-offs:** It increases deployment and observability complexity by introducing two services, plus additional coordination around API contracts and CORS.
+- **Trade-offs:** It introduces additional operational complexity through two deployable services, and requires stronger coordination around API contracts, CORS, authentication flow, and cross-service observability.
 
 ### 2) PostgreSQL as durable storage
 
 - **Decision:** Use PostgreSQL as the source of truth for users, bots, sessions, messages, and relationship state.
-- **Why:** The product depends on durable, queryable history and relational integrity across user, bot, session, and message entities.
+- **Why:** The domain is highly relational and consistency-sensitive: messages belong to sessions, sessions belong to bots, and bots belong to users. PostgreSQL fits this model well by providing transactional updates, foreign-key enforcement, and flexible querying over long-lived chat history.
 - **Trade-offs:** It requires schema evolution discipline, migrations, and operational ownership around backups, connection management, and performance tuning.
 
 ### 3) Heuristic relationship-state model
@@ -149,6 +146,6 @@ This section captures only system-shaping decisions. A decision is included only
 
 ### 5) Backend-controlled prompt construction
 
-- **Decision:** Treat the backend as the source of truth for effective prompt construction from durable state rather than trusting client-supplied prompt text alone.
-- **Why:** This centralizes consistency, ownership checks, and server-side policy/rule application in one place, so effective model behavior stays aligned with persistent companion state.
-- **Trade-offs:** It adds backend complexity and makes prompt evolution dependent on server releases rather than client-only updates.
+- **Decision:** Build the final LLM prompt on the backend from persisted bot state, relationship state, and chat history, instead of relying on client-provided prompt text alone.
+- **Why:** This ensures the model response is based on the real server-side state, while also enforcing ownership checks and backend rules in one place.
+- **Trade-offs:** It increases backend complexity and means prompt behavior changes usually require backend updates and deployment.

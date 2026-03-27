@@ -2,22 +2,22 @@
 
 ## 1. Overview
 
-FastAPI backend for the companion app: accounts, bearer sessions, bots, per-bot chat history, relationship metrics (trust, resonance, affection, openness, mood), and LLM replies. OpenAPI UI: **`GET /docs`**.
+This API is implemented as a FastAPI backend for the chatbot app. It supports authentication, bot management, persistent per-bot conversation history, relationship-state access, and LLM-backed response generation. OpenAPI UI: `GET /docs`.
 
 ## 2. Base URL
 
-- **Local:** `http://127.0.0.1:8000` (matches `frontend/lib/api.ts` default).
+- **Local:** `http://127.0.0.1:8000`.
 - **Production:** set **`NEXT_PUBLIC_API_URL`** on the frontend (HTTPS, no trailing slash), e.g. `https://your-api.onrender.com`.
 
 ## 3. Authentication
 
-Protected routes (unless noted) send:
+Most endpoints require a bearer token in the `Authorization` header:
 
 ```http
 Authorization: Bearer <access_token>
 ```
 
-Token format, validation, TTL, and logout: **[Appendix A — Tokens and logout](#appendix-a-tokens-and-logout)**.
+Token format, validation, TTL, and logout: **[Appendix A — Tokens and logout](#appendix-a--tokens-and-logout)**.
 
 ## 4. Error handling
 
@@ -31,7 +31,7 @@ Token format, validation, TTL, and logout: **[Appendix A — Tokens and logout](
 | **503** | Dependency unavailable (e.g. upstream / config) |
 | **500** | Server error |
 
-Per-route status patterns, response bodies, and **401** `detail` strings: **[Appendix B — Current HTTP behavior and edge cases](#appendix-b-current-http-behavior-and-edge-cases)**.
+Per-route status patterns, response bodies, and **401** `detail` strings: **[Appendix B — Current HTTP behavior and edge cases](#appendix-b--current-http-behavior-and-edge-cases)**.
 
 ---
 
@@ -97,7 +97,7 @@ Returns an access token for protected routes.
 
 **Notes**
 
-- **401** if credentials invalid. TTL: [Appendix A](#appendix-a-tokens-and-logout).
+- **401** if credentials invalid. TTL: [Appendix A](#appendix-a--tokens-and-logout).
 
 #### POST /users/logout
 
@@ -117,7 +117,7 @@ or `{ "revoked": false }`.
 
 **Notes**
 
-- Semantics of **`revoked`**: [Appendix A](#appendix-a-tokens-and-logout).
+- Semantics of **`revoked`**: [Appendix A](#appendix-a--tokens-and-logout).
 
 ---
 
@@ -198,7 +198,7 @@ Lists the current user’s bots.
 
 **Notes**
 
-- Field semantics: [Appendix C](#appendix-c-prompts-llm-and-send-bot-message). Fetching a single bot by id: [Appendix B](#appendix-b-current-http-behavior-and-edge-cases).
+- Field semantics: [Appendix C](#appendix-c--prompts-llm-and-send-bot-message). Fetching a single bot by id: [Appendix B](#appendix-b--current-http-behavior-and-edge-cases).
 
 #### POST /bots
 
@@ -313,7 +313,7 @@ Main chat: **saves** the user message, **calls the LLM**, **saves** the assistan
 **Notes**
 
 - **400** if `bot_id` is not owned by the user.
-- Prompt construction and debug-only fields: [Appendix C](#appendix-c-prompts-llm-and-send-bot-message) and [Appendix D](#appendix-d-debug-and-unstable-fields).
+- Prompt construction and debug-only fields: [Appendix C](#appendix-c--prompts-llm-and-send-bot-message) and [Appendix D](#appendix-d--debug-and-unstable-fields).
 
 #### POST /chat/history/bot
 
@@ -349,7 +349,7 @@ Returns up to `limit` messages for that bot’s session, chronological order.
 
 **Notes**
 
-- Does not call the LLM. History/`bot_id` behavior: [Appendix B](#appendix-b-current-http-behavior-and-edge-cases).
+- Does not call the LLM. History/`bot_id` behavior: [Appendix B](#appendix-b--current-http-behavior-and-edge-cases).
 
 #### POST /chat/build-prompt
 
@@ -439,7 +439,7 @@ Read-only snapshot: trust, resonance, affection, openness, mood, plus the human 
 
 **Notes**
 
-- Metrics change via **POST /chat/send-bot-message** and server-side logic, not via this route. Status behavior for this path: [Appendix B](#appendix-b-current-http-behavior-and-edge-cases).
+- Metrics change via **POST /chat/send-bot-message** and server-side logic, not via this route. Status behavior for this path: [Appendix B](#appendix-b--current-http-behavior-and-edge-cases).
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The companion is not a single-turn prompt: it keeps **persistent, per-relationship state** so replies can reflect how the conversation has been going, not only the latest user message. That state is **heuristic and product-shaped**—numeric bands, mood labels, and rules tuned for continuity and tone—not a clinical or learned model of the user.
+The chat bot is not a single-turn prompt: it keeps **persistent, per-relationship state** so replies can reflect how the conversation has been going, not only the latest user message. That state is **heuristic and product-shaped**—numeric bands, mood labels, and rules tuned for continuity and tone—not a clinical or learned model of the user.
 
 Compared with a plain “system prompt + history” chatbot, this stack **feeds relationship-style signals into every turn’s instructions** (and into **initiative**: how much the bot steers or extends the thread). The model still generates the actual words; state **does not** substitute for generation—it **narrows how** the backend asks the model to behave.
 
@@ -35,7 +35,7 @@ Each dimension below is a **design handle** for the product. Numbers are **bound
 
 ### 3.1 Trust
 
-- **What it is:** How much the companion **assumes good intent** and relaxes guardrails in tone—more direct vs. more cautious.
+- **What it is:** How much the bot **assumes good intent** and relaxes guardrails in tone—more direct vs. more cautious.
 - **What it is not:** Legal trust, real-world safety, or a score you should treat as “objectively correct.”
 - **Use:** Reflected in the system instructions as lower → more guarded/formal; higher → more direct and willing to assume good intent.
 
