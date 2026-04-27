@@ -1,4 +1,4 @@
-# Deployment Guide
+# Local Setup Guide
 
 ## Local Reviewer Setup
 
@@ -32,7 +32,7 @@ RESPAN_MODEL=gpt-4o
 
 `DB_URL` can point to a local PostgreSQL instance, a Docker PostgreSQL container, or another PostgreSQL database you control. The Docker example below uses the same connection string.
 
-Initialize a new empty database once:
+Start PostgreSQL first, then initialize a new empty database once:
 
 ```powershell
 $env:PYTHONPATH = "$PWD\src"
@@ -67,7 +67,7 @@ After backend `.env` is saved:
 
 ```powershell
 $env:PYTHONPATH = "$PWD\src"
-python -c "from dotenv import load_dotenv; load_dotenv(override=True); from companion.infra import llm; print(llm._base_url()); print(llm._main_model()); print(llm.get_reply([{'role':'user','content':'Reply with exactly: respan-ok'}]))"
+python -c "from dotenv import load_dotenv; load_dotenv(override=True); from companion.infra import llm; print(llm._base_url()); print(llm._main_model()); print(llm.get_reply([{'role':'system','content':'You are a connectivity test. Reply briefly and safely.'},{'role':'user','content':'Please include this exact tag in your reply: respan-ok'}]))"
 ```
 
 Expected gateway base URL:
@@ -129,7 +129,7 @@ Backend `.env` values:
 | `DB_URL` | Yes | PostgreSQL connection string for local Docker/Postgres or a managed database |
 | `AUTH_TOKEN_SECRET` | Yes | Long random secret used to sign auth tokens |
 | `RESPAN_API_KEY` | Yes* | Preferred API key for chat through Respan Gateway |
-| `RESPAN_MODEL` | Optional | Respan model id, e.g. `gpt-4o` or `gpt-4o-mini` |
+| `RESPAN_MODEL` | Optional | Respan model id available in your Respan project, e.g. `gpt-4o` or `gpt-4o-mini` |
 | `RESPAN_BASE_URL` | Optional | Respan Gateway override; defaults to `https://api.respan.ai/api/` |
 | `OPENAI_API_KEY` | Yes* | Fallback API key for direct OpenAI-compatible providers |
 | `OPENAI_BASE_URL` | Optional | Fallback OpenAI-compatible base URL |
