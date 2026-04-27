@@ -103,6 +103,8 @@ ChatBot/
 
 ## Quick Start
 
+This submission is intended to be easy to review locally. In local development, the frontend runs at **http://localhost:3000** and calls the FastAPI backend at **http://127.0.0.1:8000** by default.
+
 The commands in this section are **Windows PowerShell** (path separators, `Activate.ps1`, `$env:…`, `copy`). On **macOS / Linux**, use the same ideas: `source .venv/bin/activate`, `export PYTHONPATH="$PWD/src"`, `cp` instead of `copy`, and Unix-style paths.
 
 ### Prerequisites
@@ -110,6 +112,12 @@ The commands in this section are **Windows PowerShell** (path separators, `Activ
 - **Python 3.11+** (recommended) and **Node.js 18+**
 - A running **PostgreSQL** instance and a connection string (`DB_URL`)
 - A **Respan Gateway** API key (`RESPAN_API_KEY`) or another **OpenAI-compatible** API key if you want LLM replies
+
+### Local ports
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://127.0.0.1:8000`
+- API docs: `http://127.0.0.1:8000/docs`
 
 ### 1) Backend API
 
@@ -122,6 +130,15 @@ pip install -r requirements.txt
 ```
 
 Copy `.env.example` to `.env` and set at least **`DB_URL`**, **`AUTH_TOKEN_SECRET`**, and an LLM provider key such as **`RESPAN_API_KEY`**. See `docs/DEPLOYMENT.md` for the full Respan Gateway configuration.
+
+Minimal backend `.env`:
+
+```env
+DB_URL=postgresql://...
+AUTH_TOKEN_SECRET=change-me
+RESPAN_API_KEY=...
+RESPAN_MODEL=gpt-4o
+```
 
 Initialize the schema once (empty database):
 
@@ -146,12 +163,11 @@ In a second terminal:
 ```powershell
 cd frontend
 copy .env.local.example .env.local
-# Set NEXT_PUBLIC_API_URL to your API base, e.g. http://127.0.0.1:8000
 npm install
 npm run dev
 ```
 
-Open **http://localhost:3000**.
+Open **http://localhost:3000**. During `npm run dev`, the frontend uses `http://127.0.0.1:8000` unless `NEXT_PUBLIC_DEV_USE_REMOTE_API=1` is set.
 
 ### 3) Tests (optional)
 
